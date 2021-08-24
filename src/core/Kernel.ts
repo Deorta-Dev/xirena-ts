@@ -1,20 +1,21 @@
 import GlobalFunction from './GlobalFunctions';
 import fs from 'fs';
 import path from 'path';
+import {AbstractService} from "./AbstractService";
 
+declare global {
+    var __kernel: Kernel;
+}
 
 export class Kernel {
 
-    private routers: Array <any> = [];
-    private listeners: Array <any> = [];
-    private globalConfig: any = undefined;
-    private configs: any = {};
-    private decorations: any = {};
-    private services: any = {};
-    private projectDir: string = "";
+    private _configDir: string = '';
+    private _configs: any = {};
+    private _services: any = {};
+    private _projectDir: string = "";
 
-    private runReady = false;
-    private listenerReady: Array<any> = [];
+    private _runReady = false;
+    private _listenerReady: Array<any> = [];
 
     constructor() {
 
@@ -24,56 +25,14 @@ export class Kernel {
 
         GlobalFunction();
 
+        global.__kernel = this;
 
-    }
-
-    private async prepareDecorations(){
-        let $this: Kernel = this;
-        let explorer;
-
-        let config = this.globalConfig;
-        /**
-         * Build Annotations
-         */
-        console.log(` Loading Decorations`);
-
-        if (explorer = config.decorations) {
-            if (!Array.isArray(explorer)) explorer = [explorer];
-            function importDecorations(files: any) {
-
-                files.forEach((file: any) => {
-                    if (file.relative.endsWith('Decoration.js')) {
-                        console.log(` --> ${file.relative}`);
-                        let annotations = require(file.absolute);
-                        let keys = Object.keys(annotations);
-                        keys.forEach(key => $this.addDecoration(key, annotations[key]));
-                    }
-                });
-            }
-
-            explorer.forEach(exp => {
-                if (!Array.isArray(exp)) {
-                    if (exp['mapping'] === 'auto') {
-                        let src = exp['src'];
-                        let directoryPath = exp.absolute ? src : path.join(this.projectDir, src);
-                        importDecorations($this.getFilesDirectory(directoryPath, undefined, true));
-                    }
-                } else {
-                    importDecorations(exp.map(e => {
-                        return {
-                            relative: e,
-                            absolute: path.join(this.projectDir, e)
-                        }
-                    }));
-                }
-            });
-
-        }
     }
 
     private async prepareControllers(){
 
-        let config = this.globalConfig;
+        let config = this.getConfig('initial');
+        let $this: Kernel = this;
         /**
          * Build Controllers
          */
@@ -82,15 +41,16 @@ export class Kernel {
         if (config['controllers'] !== undefined) {
             if (config['controllers']['mapping'] === 'auto') {
                 let src = config['controllers']['src'];
-                let directoryPath = path.join(this.projectDir, src);
+                let directoryPath = path.join(this._projectDir, src);
                 let files = this.getFilesDirectory(directoryPath, undefined, true);
-                files.forEach(function (file: any) {
+                files.forEach( (file: any) => {
                     if (file.relative.endsWith('Controller.js')) {
-                        let buildFile = function () {
-                            console.log(` --> ${file.relative}`);
-                            import(file.absolute) ;
-                        }
-                        controllerBuilds.push(buildFile);
+                        console.log(` --> ${file.relative}`);
+                        let ClassController = require(file.absolute) ;
+                        /*if (typeof ClassController === 'function') {
+                            let controller = new ClassController($this);
+                            controller.kernel = $this;
+                        }*/
                     }
                 });
             }
@@ -98,7 +58,7 @@ export class Kernel {
     }
 
     public async prepareServices(){
-        let config = this.globalConfig;
+        let config = this.getConfig('initial');
         let $this: Kernel = this;
         console.log(` Loading Services`);
         let explorer: any = config.services;
@@ -115,8 +75,23 @@ export class Kernel {
                         let keys = Object.keys(services);
                         let key: string;
                         for (key of keys) {
-                            $this.addService(key, services[key]);
-                            await services[key].build($this);
+                            if(key !== 'AbstractService') {
+                                let ClassService = services[key];
+                                let objectService: AbstractService = new ClassService();
+                                if (objectService) {
+                                    await objectService.build($this);
+                                    let name:string = ClassService.$name;
+                                    if(name === undefined){
+                                        name = key.replace(/[S][e][r][v][i][c][e]$/, '');
+                                        name = name.charAt(0).toLowerCase() + name.slice(1);
+                                    }
+
+                                    await objectService.build($this);
+
+                                    $this.addService(name, objectService);
+
+                                }
+                            }
                         }
                     }
                 }
@@ -126,14 +101,14 @@ export class Kernel {
                 if (!Array.isArray(exp)) {
                     if (exp['mapping'] === 'auto') {
                         let src = exp['src'];
-                        let directoryPath = exp.absolute ? src : path.join(this.projectDir, src);
+                        let directoryPath = exp.absolute ? src : path.join(this._projectDir, src);
                         await importServices(this.getFilesDirectory(directoryPath, undefined, true));
                     }
                 } else {
                     await importServices(exp.map(e => {
                         return {
                             relative: e,
-                            absolute: path.join(this.projectDir, e)
+                            absolute: path.join(this._projectDir, e)
                         }
                     }));
                 }
@@ -147,9 +122,7 @@ export class Kernel {
 
     async prepare(){
         await this.prepareServices();
-        await this.prepareDecorations();
         await this.prepareControllers();
-
     }
 
 
@@ -159,17 +132,21 @@ export class Kernel {
 
     public getFilesDirectory(directory: string, origDirectory: string| undefined, findSub: boolean = false):Array<any> {
         directory = directory.replace(/\\\\/, '\\\\');
-        while(directory.endsWith("\\"))directory = directory.slice(0,-1);
+        while(directory.endsWith("\\")) directory = directory.slice(0,-1);
         origDirectory = origDirectory || directory;
         let result: Array<any> = [];
         let files = fs.readdirSync(directory, {withFileTypes: true});
         let javascriptER = /.*\.js$/;
         let $this: Kernel = this;
+
+
         files.forEach(function (file: any) {
-            if (file.isDirectory() && findSub) {
-                let directoryPath = path.join(directory, file.name + "\\");
-                let subResult = $this.getFilesDirectory(directoryPath, origDirectory, true);
-                subResult.forEach((sub:any) => result.push(sub))
+            if (file.isDirectory()) {
+                if(findSub) {
+                    let directoryPath = path.join(directory, file.name + "\\");
+                    let subResult = $this.getFilesDirectory(directoryPath, origDirectory, true);
+                    subResult.forEach((sub: any) => result.push(sub))
+                }
             } else {
                 if (javascriptER.test(file.name)) {
                     file.absolute = path.join(directory, file.name);
@@ -188,5 +165,41 @@ export class Kernel {
 
     public addService(serviceName:string, serviceFunction: any){
 
+    }
+
+    public getConfig(name: string): any{
+        if(this._configs[name] === undefined) {
+            let dir = this._configDir ? path.join(this._configDir, name + ".json") : path.join(this._projectDir, "config/" + name + ".json");
+            if (fs.existsSync(dir)) {
+                if (this._configs === undefined) this._configs = {};
+                if (this._configs[name] === undefined) this._configs[name] = require(dir);
+            }
+        }
+        return this._configs[name];
+    }
+
+
+    get configDir(): string {
+        return this._configDir;
+    }
+
+    set configDir(value: string) {
+        this._configDir = value;
+    }
+
+    get services(): any {
+        return this._services;
+    }
+
+    set services(value: any) {
+        this._services = value;
+    }
+
+    get projectDir(): string {
+        return this._projectDir;
+    }
+
+    set projectDir(value: string) {
+        this._projectDir = value;
     }
 }

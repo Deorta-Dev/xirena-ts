@@ -1,9 +1,12 @@
-import {Route} from "../core/decorations/Route";
+import {Middleware, Route} from "../core/squamas/http/HttpDecoration";
 
-export class DefaultController{
+export class DefaultController {
 
     @Route('/', 'GET')
-    public homeAction(){
-
+    @Middleware('permission', 'routes.middleware')
+    public homeAction(): void {
+        console.log("Prueba");
     }
+
+
 }
