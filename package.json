@@ -14,7 +14,6 @@
     "type": "git",
     "url": "git+https://github.com/Deorta-Dev/xirena-ts.git"
   },
-
   "exports": {
     "require": "./build/index.js"
   },
