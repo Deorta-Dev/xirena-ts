@@ -1,0 +1,15 @@
+{
+
+  "annotations": {
+    "mapping": "auto",
+    "src": "./"
+  },
+  "services": {
+    "mapping": "auto",
+    "src": "./"
+  },
+  "controllers": {
+    "mapping": "auto",
+    "src": "./"
+  }
+}

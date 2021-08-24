@@ -15,13 +15,25 @@ export class Kernel {
     private _projectDir: string = "";
 
     private _runReady = false;
-    private _listenerReady: Array<any> = [];
+    private _listenerReady: Array<Function> = [];
+
+    private _appScope: any;
+
+    private _isLocal = true;
+
+    get appScope(): any {
+        return this._appScope;
+    }
+
+    set appScope(value: any) {
+        this._appScope = value;
+    }
 
     constructor() {
 
-        console.log("┌----------------------------------┐");
-        console.log("├------ Initializer Xirena TS -----┤");
-        console.log("└----------------------------------┘");
+        console.log("┌-----------------------------------┐");
+        console.log("├------ Initializer Xirena TS ------┤");
+        console.log("└-----------------------------------┘");
 
         GlobalFunction();
 
@@ -66,33 +78,41 @@ export class Kernel {
             if (!Array.isArray(explorer)) explorer = [explorer];
 
 
-
             async function importServices(files: any) {
                 let file: any;
                 for(file of files){
+
                     if(file.relative.endsWith('Service.js')) {
                         let services = require(file.absolute);
+
                         let keys = Object.keys(services);
                         let key: string;
                         for (key of keys) {
-                            if(key !== 'AbstractService') {
+                            if (key && key !== '' && key !== 'AbstractService') {
+
                                 let ClassService = services[key];
-                                let objectService: AbstractService = new ClassService();
-                                if (objectService) {
-                                    await objectService.build($this);
-                                    let name:string = ClassService.$name;
-                                    if(name === undefined){
-                                        name = key.replace(/[S][e][r][v][i][c][e]$/, '');
-                                        name = name.charAt(0).toLowerCase() + name.slice(1);
+                                if(ClassService !== AbstractService) {
+                                    let objectService: AbstractService = new ClassService();
+
+                                    if (objectService instanceof AbstractService) {
+
+                                        let name: string = ClassService.$name;
+                                        if (name === undefined) {
+                                            name = key.replace(/[S][e][r][v][i][c][e]$/, '');
+                                            name = name.charAt(0).toLowerCase() + name.slice(1);
+                                        }
+
+
+
+                                        await objectService.build($this);
+
+                                        $this.addService(name, objectService);
+
                                     }
-
-                                    await objectService.build($this);
-
-                                    $this.addService(name, objectService);
-
                                 }
                             }
                         }
+
                     }
                 }
             }
@@ -102,6 +122,9 @@ export class Kernel {
                     if (exp['mapping'] === 'auto') {
                         let src = exp['src'];
                         let directoryPath = exp.absolute ? src : path.join(this._projectDir, src);
+                        if(!this._isLocal){
+                            await importServices(this.getFilesDirectory(path.join(__dirname,'../'), undefined, true));
+                        }
                         await importServices(this.getFilesDirectory(directoryPath, undefined, true));
                     }
                 } else {
@@ -113,21 +136,25 @@ export class Kernel {
                     }));
                 }
             }
-
-
-
         }
 
     }
 
     async prepare(){
+        this._isLocal = true;
+        await this.prepareServices();
+        await this.prepareControllers();
+    }
+
+    async prepareServer(){
+        this._isLocal = false;
         await this.prepareServices();
         await this.prepareControllers();
     }
 
 
-    public startServer(): void{
-
+    public startApplication(): void{
+        this._listenerReady.forEach((fn:Function) => fn());
     }
 
     public getFilesDirectory(directory: string, origDirectory: string| undefined, findSub: boolean = false):Array<any> {
@@ -159,12 +186,8 @@ export class Kernel {
     }
 
 
-    public addDecoration(decorationName:string, decorationFunction: any){
-
-    }
-
-    public addService(serviceName:string, serviceFunction: any){
-
+    public addService(serviceName:string, serviceFunction: Object){
+        this.services[serviceName] = serviceFunction;
     }
 
     public getConfig(name: string): any{
@@ -178,6 +201,9 @@ export class Kernel {
         return this._configs[name];
     }
 
+    public onReady(fn: Function): void{
+        this._listenerReady.push(fn);
+    }
 
     get configDir(): string {
         return this._configDir;
@@ -202,4 +228,33 @@ export class Kernel {
     set projectDir(value: string) {
         this._projectDir = value;
     }
+
+    public async initServices(params: any = {}, required: Array<string> = []): Promise<any>{
+        params['$kernel'] = this;
+        params['$appScope'] = this.appScope;
+
+        let serviceStored:any = {};
+
+        let services = this.services;
+        for (let serviceKey in services){
+            let instances = services[serviceKey].instances(params);
+            for(let instanceKey in instances){
+                if(required.includes(instanceKey)) {
+                    params[instanceKey] = await instances[instanceKey];
+                    serviceStored [instanceKey] = services[serviceKey];
+                }
+            }
+        }
+
+        params['$finalize'] = () => {
+            for (let serviceKey in serviceStored) {
+                serviceStored[serviceKey].finalize(params);
+            }
+        }
+
+        return params;
+    }
+
+
+
 }

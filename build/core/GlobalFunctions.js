@@ -1,81 +1,32 @@
-
-declare global {
-    var getParamNamesFunctions: Function;
-
-    interface String {
-        normalize(): string;
-        /**
-         * Replace all instances of a substring in a string, using a regular expression or search string.
-         * @param searchValue A string to search for.
-         * @param replaceValue A string containing the text to replace for every successful match of searchValue in this string.
-         */
-        replaceAll(searchValue: string | RegExp, replaceValue: string): string;
-
-        replaceIgAll(searchValue: string | RegExp, replaceValue: string): string;
-
-        isLetter(): boolean;
-
-        toUnicode(): string;
-
-        toProperCase(): string;
-
-        cleanAccents(): string;
-
-        htmlEncode(): string;
-
-        htmlDecode(): string;
-
-        firstWord(): string
-
-        hasIgnoreFormat( string: string ): boolean;
-
-    }
-
-    interface Array<T> {
-        clone(): Array<T>;
-        find( parameters: any ): Array<T>;
-        replace( parameters: Array<any>, object: any ): Array<T>;
-        exists( parameters: Array<any> ): boolean;
-        count( parameters: Array<any> ): number;
-        getIndexFind( parameters: Array<any> ): number;
-        remove( index: number ): boolean;
-        removeObject( object: any ): boolean;
-    }
-}
-
-export default function globalFunctions(){
-
-    global.getParamNamesFunctions = (func: Function) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+function globalFunctions() {
+    global.getParamNamesFunctions = (func) => {
         let STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
         let ARGUMENT_NAMES = /([^\s,]+)/g;
         let fnStr = func.toString().replace(STRIP_COMMENTS, '');
-        let result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-        if(result === null)
+        let result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+        if (result === null)
             result = [];
         return result;
-    }
+    };
     /**
      * Global Functions
      */
-
     /**
      * Metodo para desencriptar de Base64
      * @param string
      */
-
-
     /**
      * String Functions
      */
-
-    String.prototype.replaceAll = function (searchValue: string | RegExp, replaceValue: string): string {
-        if(typeof searchValue === 'string'){
+    String.prototype.replaceAll = function (searchValue, replaceValue) {
+        if (typeof searchValue === 'string') {
             searchValue = new RegExp(searchValue);
         }
         return this.replace(searchValue, replaceValue);
     };
-
-    String.prototype.normalize = function (): string {
+    String.prototype.normalize = function () {
         return this
             .replaceAll("á", 'a')
             .replaceAll("é", 'e')
@@ -92,13 +43,13 @@ export default function globalFunctions(){
             .replaceAll("Ü", 'U')
             .replaceAll("Ñ", 'N');
     };
-
     String.prototype.isLetter = function () {
         if (this.length === 1 && this.match(/[a-z]/i))
             return true;
-        else return false
+        else
+            return false;
     };
-    String.prototype.toProperCase = function ():string {
+    String.prototype.toProperCase = function () {
         return this.replace(/\w\S*/g, function (txt) {
             return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
         });
@@ -120,20 +71,15 @@ export default function globalFunctions(){
             .replaceAll("Ü", '\u00DC')
             .replaceAll("Ñ", '\u00D1');
     };
-
-
     String.prototype.replaceAll = function (search, replacement) {
         let target = this;
         return target.replace(new RegExp(search), replacement);
     };
-
-    String.prototype.hasIgnoreFormat = function (string: string): boolean {
+    String.prototype.hasIgnoreFormat = function (string) {
         string = string.toLowerCase().normalize();
-        let find: string = this.toLowerCase().normalize();
+        let find = this.toLowerCase().normalize();
         return (new RegExp(string)).test(find);
     };
-
-
     String.prototype.cleanAccents = function () {
         let rp = this;
         return rp.replaceAll("á", 'a')
@@ -151,9 +97,8 @@ export default function globalFunctions(){
             .replaceAll("Ü", 'U')
             .replaceAll("Ñ", 'N');
     };
-
-    String.prototype.htmlEncode = function ():string {
-        let rp: string = this + '';
+    String.prototype.htmlEncode = function () {
+        let rp = this + '';
         rp = rp.replaceAll("á", '&aacute;');
         rp = rp.replaceAll("é", '&eacute;');
         rp = rp.replaceAll("í", '&iacute;');
@@ -170,9 +115,8 @@ export default function globalFunctions(){
         rp = rp.replaceAll("Ü", '&Uuml;');
         return rp;
     };
-
     String.prototype.htmlDecode = function () {
-        let rp:string = this + '';
+        let rp = this + '';
         rp = rp.replaceAll("&aacute;", 'á');
         rp = rp.replaceAll("&eacute;", 'é');
         rp = rp.replaceAll("&iacute;", 'í');
@@ -189,24 +133,18 @@ export default function globalFunctions(){
         rp = rp.replaceAll("&Uuml;", 'Ü');
         return rp;
     };
-
     String.prototype.firstWord = function () {
         return this.split(' ')[0];
     };
-
-
     /**
      * Array Functions
      */
-
-
     Array.prototype.clone = function () {
         return this.slice(0);
     };
-
-    Array.prototype.find = function (parameters: any): Array<any> {
+    Array.prototype.find = function (parameters) {
         let is = true;
-        let objects: Array<any> = [];
+        let objects = [];
         for (let i = 0; i < this.length; i++) {
             is = true;
             for (let key in parameters) {
@@ -221,7 +159,6 @@ export default function globalFunctions(){
         }
         return objects;
     };
-
     Array.prototype.replace = function (parameters, object) {
         let is = true;
         for (let i = 0; i < this.length; i++) {
@@ -238,7 +175,6 @@ export default function globalFunctions(){
         }
         return this;
     };
-
     Array.prototype.exists = function (parameters) {
         for (let i = 0; i < this.length; i++) {
             let is = true;
@@ -248,11 +184,11 @@ export default function globalFunctions(){
                     break;
                 }
             }
-            if (is) return true;
+            if (is)
+                return true;
         }
         return false;
     };
-
     Array.prototype.count = function (parameters) {
         let objects = [];
         for (let i = 0; i < this.length; i++) {
@@ -269,7 +205,6 @@ export default function globalFunctions(){
         }
         return objects.length;
     };
-
     Array.prototype.getIndexFind = function (parameters) {
         for (let i = 0; i < this.length; i++) {
             let is = true;
@@ -279,16 +214,15 @@ export default function globalFunctions(){
                     break;
                 }
             }
-            if (is) return i;
+            if (is)
+                return i;
         }
         return -1;
     };
-
-    Array.prototype.remove = function (x): boolean {
+    Array.prototype.remove = function (x) {
         this.splice(x, 1);
         return true;
     };
-
     Array.prototype.removeObject = function (object) {
         for (let i = 0; i < this.length; i++) {
             if (this[i] === object) {
@@ -298,8 +232,6 @@ export default function globalFunctions(){
         }
         return false;
     };
-
-
     console.log("> Created -> global functions");
-
 }
+exports.default = globalFunctions;
