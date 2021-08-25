@@ -1,4 +1,4 @@
-import {Http, Response, Request} from "./Http";
+import {Http, Response, Request, IoServer} from "./Http";
 import {HttpService} from "./HttpService";
 import {Socket} from "socket.io";
 
@@ -122,7 +122,7 @@ export const Middleware = (name: string, ...args: any) => {
     };
 };
 
-export const MiddlewareHandle = (name: string, type: ('BEFORE' | 'AFTER' | 'ASYNC') = 'BEFORE') => {
+export const MiddlewareRoute = (name: string, type: ('BEFORE' | 'AFTER' | 'ASYNC') = 'BEFORE') => {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         if (name === '$finally') type = 'AFTER';
         descriptor.value.isMiddle = true;
@@ -143,6 +143,28 @@ export const SocketOn = (name: string) => {
             args.forEach((arg:any)=>  dataParams.push(params[arg] || data));
             Reflect.apply(descriptor.value, undefined, dataParams);
         })
+    };
+};
+
+export const MiddlewareSocket = (name: string) => {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        let httpService: HttpService = __kernel.services['http'];
+        (async function apply (){
+            let params = await __kernel.initServices({}, []);
+            let $ioServer:IoServer = await httpService.instances(params).$ioServer;
+            $ioServer.use(async function(socket, next){
+                let params = await __kernel.initServices({}, []);
+                params['$socket'] = socket;
+                params['$handshake'] = socket.handshake;
+                params['$request'] = socket.handshake;
+                params['$next'] = next;
+                let args = getParamNamesFunctions(descriptor.value);
+                let dataParams:Array<any> = [];
+                args.forEach((arg:any)=>  dataParams.push(params[arg] || undefined));
+                Reflect.apply(descriptor.value, undefined, dataParams);
+            });
+        })();
+
     };
 };
 
