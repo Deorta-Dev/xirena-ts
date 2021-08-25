@@ -1,4 +1,4 @@
-import {Http, Response, Request, IoServer} from "./Http";
+import {Response, Request, IoServer} from "./Http";
 import {HttpService} from "./HttpService";
 import {Socket} from "socket.io";
 
@@ -26,10 +26,11 @@ function getExecutions(func: any): Array<any> {
     }
 
     findHandle("$all", []);
-    func.middlewaresAssigned.forEach((mid: any) => findHandle(mid.name, mid.args));
+    if (Array.isArray(func.middlewaresAssigned))
+        func.middlewaresAssigned.forEach((mid: any) => findHandle(mid.name, mid.args));
     findHandle("$finally", []);
     return handlesBefore
-        .concat([{fn:func, isAction: true}])
+        .concat([{fn: func, isAction: true}])
         .concat(handlesAfter)
         .concat(handlesAsync);
 
@@ -42,15 +43,15 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
         async function apply() {
             let httpService: HttpService = __kernel.services['http'];
             httpService.addRoute(route, method, async function ($request: Request, $response: Response) {
-                if(descriptor.value.executions === undefined){
+                if (descriptor.value.executions === undefined) {
                     descriptor.value.executions = getExecutions(descriptor.value);
                 }
                 let params: any = $request.params;
 
                 if (Array.isArray(descriptor.value.executions)) {
-                    let executions = descriptor.value.executions.clone(), currentExecution:any, dataResponse: any;
+                    let executions = descriptor.value.executions.clone(), currentExecution: any, dataResponse: any;
 
-                    function sendFn(data:any) {
+                    function sendFn(data: any) {
                         dataResponse = data;
                         if (currentExecution)
                             if (!currentExecution.isAction) {
@@ -64,8 +65,8 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
 
                             let args = getParamNamesFunctions(currentExecution.fn);
                             let dataParams: Array<any> = [];
-                            args.forEach((arg: any) =>{
-                                if(currentExecution.isMiddle && arg === '$args')
+                            args.forEach((arg: any) => {
+                                if (currentExecution.isMiddle && arg === '$args')
                                     dataParams.push(currentExecution.args);
                                 else dataParams.push(params[arg] || undefined);
                             });
@@ -133,14 +134,14 @@ export const MiddlewareRoute = (name: string, type: ('BEFORE' | 'AFTER' | 'ASYNC
 export const SocketOn = (name: string) => {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let httpService: HttpService = __kernel.services['http'];
-        httpService.addSocketOn(name, async function (socket: Socket, data:any, connScope:any, callback: Function) {
+        httpService.addSocketOn(name, async function (socket: Socket, data: any, connScope: any, callback: Function) {
             let params = await __kernel.initServices({}, []);
             params['$scope'] = connScope;
             params['$socket'] = socket;
             params['$send'] = callback;
             let args = getParamNamesFunctions(descriptor.value);
-            let dataParams:Array<any> = [];
-            args.forEach((arg:any)=>  dataParams.push(params[arg] || data));
+            let dataParams: Array<any> = [];
+            args.forEach((arg: any) => dataParams.push(params[arg] || data));
             Reflect.apply(descriptor.value, undefined, dataParams);
         })
     };
@@ -149,18 +150,18 @@ export const SocketOn = (name: string) => {
 export const MiddlewareSocket = (name: string) => {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let httpService: HttpService = __kernel.services['http'];
-        (async function apply (){
+        (async function apply() {
             let params = await __kernel.initServices({}, []);
-            let $ioServer:IoServer = await httpService.instances(params).$ioServer;
-            $ioServer.use(async function(socket, next){
+            let $ioServer: IoServer = await httpService.instances(params).$ioServer;
+            $ioServer.use(async function (socket, next) {
                 let params = await __kernel.initServices({}, []);
                 params['$socket'] = socket;
                 params['$handshake'] = socket.handshake;
                 params['$request'] = socket.handshake;
                 params['$next'] = next;
                 let args = getParamNamesFunctions(descriptor.value);
-                let dataParams:Array<any> = [];
-                args.forEach((arg:any)=>  dataParams.push(params[arg] || undefined));
+                let dataParams: Array<any> = [];
+                args.forEach((arg: any) => dataParams.push(params[arg] || undefined));
                 Reflect.apply(descriptor.value, undefined, dataParams);
             });
         })();
