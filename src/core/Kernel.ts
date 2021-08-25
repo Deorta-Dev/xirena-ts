@@ -235,7 +235,7 @@ export class Kernel {
         for (let serviceKey in services){
             let instances = services[serviceKey].instances(params);
             for(let instanceKey in instances){
-                if(required.includes(instanceKey)) {
+                if(required.includes(instanceKey) || required.length === 0) {
                     params[instanceKey] = await instances[instanceKey];
                     serviceStored [instanceKey] = services[serviceKey];
                 }
