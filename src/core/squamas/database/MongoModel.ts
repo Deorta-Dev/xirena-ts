@@ -112,8 +112,10 @@ export abstract class MongoModel {
     }
 
     async $obtain(match:any, projection:any = {}, sort: any = {}) {
+        let hidden: Array<string> = this.hiddenAttributes();
+        for(let attr of hidden){ projection[attr] = 0 }
         const options = {sort, projection};
-        if (this.connectionName() === undefined) throw  'TableName attribute is not defined Obtain';
+        if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName()).findOne(match, options);
         connection.$finalize();
