@@ -75,7 +75,7 @@ export abstract class MongoModel {
 
     async $insert() {
         let connection = await this.getConnectionDatabase();
-        let result = await connection.collection(this.getCollectionName()).insertOne(this.modeling());
+        let result = await connection.collection(this.collectionName()).insertOne(this.modeling());
         connection.$finalize();
         this.id = result.insertedId;
         return (result.insertedId);
@@ -84,14 +84,14 @@ export abstract class MongoModel {
     $clone(){
         let cloned = this.toJson();
         cloned.id = undefined;
-        let Class = this.getClass();
+        let Class = this.class();
         return new Class().fromJson(cloned);
     }
 
     async $update() {
         this.updated = new Date();
         let connection = await this.getConnectionDatabase();
-        let result = await connection.collection(this.getCollectionName())
+        let result = await connection.collection(this.collectionName())
             .updateOne({_id: new ObjectId(this.id)},{$set: this.modeling()});
         connection.$finalize();
         return result;
@@ -99,10 +99,10 @@ export abstract class MongoModel {
 
     async $find(match:any) {
         let connection = await this.getConnectionDatabase();
-        let result = await connection.collection(this.getConnectionName()).find(match).toArray();
+        let result = await connection.collection(this.connectionName()).find(match).toArray();
         connection.$finalize();
         let objects = [];
-        let Class = this.getClass();
+        let Class = this.class();
         for (let data of result) {
             let object = new Class();
             object.fromJson(data);
@@ -113,9 +113,9 @@ export abstract class MongoModel {
 
     async $obtain(match:any, projection:any = {}, sort: any = {}) {
         const options = {sort, projection};
-        if (this.getConnectionName() === undefined) throw  'TableName attribute is not defined Obtain';
+        if (this.connectionName() === undefined) throw  'TableName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
-        let result = await connection.collection(this.getCollectionName()).findOne(match, options);
+        let result = await connection.collection(this.collectionName()).findOne(match, options);
         connection.$finalize();
         this.fromJson(result);
         return this;
@@ -129,20 +129,24 @@ export abstract class MongoModel {
 
     async getConnectionDatabase() {
         let $database = await __kernel.services['database'].instance({}).$db;
-        return await $database(this.getConnectionName() || 'default');
+        return await $database(this.connectionName() || 'default');
     }
 
     async getCollection() {
-        if (this.getConnectionName() === undefined) throw 'CollectionName attribute is not defined in getCollection: '+this.getConnectionName();
+        if (this.connectionName() === undefined) throw 'CollectionName attribute is not defined in getCollection: '+this.connectionName();
         let connection = await this.getConnectionDatabase();
-        return connection.collection(this.getConnectionName());
+        return connection.collection(this.connectionName());
     }
 
-    abstract getClass(): any;
+    abstract class(): any;
 
-    abstract getCollectionName(): string;
+    abstract collectionName(): string;
 
-    public getConnectionName(): string{
+    public connectionName(): string{
         return 'default'
+    };
+
+    public hiddenAttributes(): Array<string>{
+        return [];
     };
 }
