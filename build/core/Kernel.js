@@ -17,6 +17,7 @@ const GlobalFunctions_1 = __importDefault(require("./GlobalFunctions"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const AbstractService_1 = require("./AbstractService");
+const AbstractController_1 = require("./AbstractController");
 class Kernel {
     constructor() {
         this._configDir = '';
@@ -54,12 +55,12 @@ class Kernel {
                     let files = this.getFilesDirectory(directoryPath, undefined, true);
                     files.forEach((file) => {
                         if (file.relative.endsWith('Controller.js')) {
-                            console.log(` --> ${file.relative}`);
-                            let ClassController = require(file.absolute);
-                            /*if (typeof ClassController === 'function') {
-                                let controller = new ClassController($this);
-                                controller.kernel = $this;
-                            }*/
+                            let controllers = require(file.absolute);
+                            for (let key in controllers) {
+                                let ClassController = controllers[key];
+                                if (ClassController !== AbstractController_1.AbstractController)
+                                    console.log(` --> ${file.relative}: ${key}`);
+                            }
                         }
                     });
                 }
@@ -84,9 +85,10 @@ class Kernel {
                                 let keys = Object.keys(services);
                                 let key;
                                 for (key of keys) {
-                                    if (key && key !== '' && key !== 'AbstractService') {
+                                    if (key && key !== '') {
                                         let ClassService = services[key];
                                         if (ClassService !== AbstractService_1.AbstractService) {
+                                            console.log(` --> ${file.relative}: ${key}`);
                                             let objectService = new ClassService();
                                             if (objectService instanceof AbstractService_1.AbstractService) {
                                                 let name = ClassService.$name;

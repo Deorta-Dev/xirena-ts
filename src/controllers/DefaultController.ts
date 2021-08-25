@@ -1,4 +1,4 @@
-import {Middleware, MiddlewareHandle, Route} from "../core/squamas/http/HttpDecoration";
+import {Middleware, MiddlewareHandle, Route} from "../core/squamas/http/HttpDecorations";
 import {AbstractController} from "../core/AbstractController";
 
 

@@ -2,6 +2,7 @@ import GlobalFunction from './GlobalFunctions';
 import fs from 'fs';
 import path from 'path';
 import {AbstractService} from "./AbstractService";
+import {AbstractController} from "./AbstractController";
 
 declare global {
     var __kernel: Kernel;
@@ -57,12 +58,12 @@ export class Kernel {
                 let files = this.getFilesDirectory(directoryPath, undefined, true);
                 files.forEach( (file: any) => {
                     if (file.relative.endsWith('Controller.js')) {
-                        console.log(` --> ${file.relative}`);
-                        let ClassController = require(file.absolute) ;
-                        /*if (typeof ClassController === 'function') {
-                            let controller = new ClassController($this);
-                            controller.kernel = $this;
-                        }*/
+                        let controllers = require(file.absolute);
+                        for(let key in controllers){
+                            let ClassController = controllers[key];
+                            if(ClassController !== AbstractController)
+                                console.log(` --> ${file.relative}: ${key}`);
+                        }
                     }
                 });
             }
@@ -77,21 +78,20 @@ export class Kernel {
         if ( explorer ) {
             if (!Array.isArray(explorer)) explorer = [explorer];
 
-
             async function importServices(files: any) {
                 let file: any;
                 for(file of files){
 
                     if(file.relative.endsWith('Service.js')) {
                         let services = require(file.absolute);
-
                         let keys = Object.keys(services);
                         let key: string;
                         for (key of keys) {
-                            if (key && key !== '' && key !== 'AbstractService') {
-
+                            if (key && key !== ''){
                                 let ClassService = services[key];
                                 if(ClassService !== AbstractService) {
+                                    console.log(` --> ${file.relative}: ${key}`);
+
                                     let objectService: AbstractService = new ClassService();
 
                                     if (objectService instanceof AbstractService) {
@@ -101,11 +101,7 @@ export class Kernel {
                                             name = key.replace(/[S][e][r][v][i][c][e]$/, '');
                                             name = name.charAt(0).toLowerCase() + name.slice(1);
                                         }
-
-
-
                                         await objectService.build($this);
-
                                         $this.addService(name, objectService);
 
                                     }

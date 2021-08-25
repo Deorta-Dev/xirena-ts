@@ -2,10 +2,10 @@ import {AbstractService} from "../../AbstractService";
 import {Kernel} from "../../Kernel";
 import express from "express";
 import path from "path";
-import {Http, IoServer} from "./Http";
+import {Http, IoServer, Response} from "./Http";
 import fs from "fs";
 import ip from "ip";
-import {Server} from "socket.io";
+import * as Socket from "socket.io";
 
 let $http:Http;
 let $ioServer:IoServer;
@@ -26,7 +26,7 @@ export class HttpService extends AbstractService {
         if (ssl) {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
-            $ioServer = new Server(server);
+            $ioServer = new Socket.Server(server);
             onReady = ()=>{
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
@@ -43,7 +43,7 @@ export class HttpService extends AbstractService {
         else {
             let options = {};
             let server = require('http').createServer(options, $http);
-            $ioServer = new Server(server);
+            $ioServer = new Socket.Server(server);
             onReady = ()=>{
 
                 server.listen(port, () => {
@@ -61,7 +61,7 @@ export class HttpService extends AbstractService {
         }
 
         let $this = this;
-        $ioServer.on('connection', $socket => {
+        $ioServer.on('connection', ($socket: Socket.Socket) => {
 
             let $connScope = {};
 
@@ -93,7 +93,29 @@ export class HttpService extends AbstractService {
     }
 
     public instances(services: any): any {
-        return {$http, $ioServer};
+        return {$http, $ioServer, $cookies: (name:string) => {
+                let {$request} = services;
+                let cookiesMap:any = {};
+                if (typeof $request.headers.cookie === 'string')
+                    $request.headers.cookie.split(';').forEach((stringCookie: string) => {
+                        let [c, v] = stringCookie.split('=');
+                        while (c.startsWith(' ')) c = c.slice(1);
+                        while (c.endsWith(' ')) c = c.slice(0, -1);
+                        cookiesMap[c] = v;
+                    });
+                return decodeURIComponent(cookiesMap[name]);
+            }, $redirect: (url: string) => {
+                let {$send, $request} = services;
+                if (!/(http:\\\\)|(https:\\\\)/.test(url)) {
+                    url = $request.protocol+'://'+$request.get('host') + '/' +url;
+                }
+                $send((response:Response) => {
+                    response.writeHead(307,
+                        {Location: url}
+                    );
+                    response.end();
+                });
+            }};
     }
 
 
@@ -121,8 +143,6 @@ export class HttpService extends AbstractService {
     public addSocketOn(name: string, fn: Function){
         this._socketOnFunction.push({name, fn});
     }
-
-
 
 
 }

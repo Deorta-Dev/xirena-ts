@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -9,7 +28,7 @@ const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const ip_1 = __importDefault(require("ip"));
-const socket_io_1 = require("socket.io");
+const Socket = __importStar(require("socket.io"));
 let $http;
 let $ioServer;
 class HttpService extends AbstractService_1.AbstractService {
@@ -31,7 +50,7 @@ class HttpService extends AbstractService_1.AbstractService {
         if (ssl) {
             let options = { key: fs_1.default.readFileSync(ssl.key), cert: fs_1.default.readFileSync(ssl.cert) };
             let server = require('https').createServer(options, $http);
-            $ioServer = new socket_io_1.Server(server);
+            $ioServer = new Socket.Server(server);
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
@@ -49,7 +68,7 @@ class HttpService extends AbstractService_1.AbstractService {
         else {
             let options = {};
             let server = require('http').createServer(options, $http);
-            $ioServer = new socket_io_1.Server(server);
+            $ioServer = new Socket.Server(server);
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
@@ -65,7 +84,7 @@ class HttpService extends AbstractService_1.AbstractService {
             };
         }
         let $this = this;
-        $ioServer.on('connection', $socket => {
+        $ioServer.on('connection', ($socket) => {
             let $connScope = {};
             $this._socketOnFunction.forEach((listener) => {
                 if (listener.name === '$connection') {
@@ -92,7 +111,29 @@ class HttpService extends AbstractService_1.AbstractService {
     finalize(instances) {
     }
     instances(services) {
-        return { $http, $ioServer };
+        return { $http, $ioServer, $cookies: (name) => {
+                let { $request } = services;
+                let cookiesMap = {};
+                if (typeof $request.headers.cookie === 'string')
+                    $request.headers.cookie.split(';').forEach((stringCookie) => {
+                        let [c, v] = stringCookie.split('=');
+                        while (c.startsWith(' '))
+                            c = c.slice(1);
+                        while (c.endsWith(' '))
+                            c = c.slice(0, -1);
+                        cookiesMap[c] = v;
+                    });
+                return decodeURIComponent(cookiesMap[name]);
+            }, $redirect: (url) => {
+                let { $send, $request } = services;
+                if (!/(http:\\\\)|(https:\\\\)/.test(url)) {
+                    url = $request.protocol + '://' + $request.get('host') + '/' + url;
+                }
+                $send((response) => {
+                    response.writeHead(307, { Location: url });
+                    response.end();
+                });
+            } };
     }
     addRoute(route, method = 'ANY', fn) {
         switch (method) {

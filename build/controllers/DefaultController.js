@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DefaultController = void 0;
-const HttpDecoration_1 = require("../core/squamas/http/HttpDecoration");
+const HttpDecorations_1 = require("../core/squamas/http/HttpDecorations");
 const AbstractController_1 = require("../core/AbstractController");
 class DefaultController extends AbstractController_1.AbstractController {
     homeAction($send) {
@@ -19,12 +19,12 @@ class DefaultController extends AbstractController_1.AbstractController {
     }
 }
 __decorate([
-    HttpDecoration_1.Route('/', 'GET'),
-    HttpDecoration_1.Middleware('permission', 'routes.middleware'),
-    HttpDecoration_1.Middleware('permission', 'routes.middleware2'),
-    HttpDecoration_1.Middleware('permission', 'routes.middleware3')
+    HttpDecorations_1.Route('/', 'GET'),
+    HttpDecorations_1.Middleware('permission', 'routes.middleware'),
+    HttpDecorations_1.Middleware('permission', 'routes.middleware2'),
+    HttpDecorations_1.Middleware('permission', 'routes.middleware3')
 ], DefaultController.prototype, "homeAction", null);
 __decorate([
-    HttpDecoration_1.MiddlewareHandle('permission')
+    HttpDecorations_1.MiddlewareHandle('permission')
 ], DefaultController.prototype, "prueba", null);
 exports.DefaultController = DefaultController;
