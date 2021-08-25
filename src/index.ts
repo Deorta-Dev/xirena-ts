@@ -12,8 +12,11 @@ import {TwigService} from "./core/squamas/twig/TwigService";
 
 import {QueryableService} from "./core/squamas/queryable/QueryableService";
 
+import {DatabaseService} from "./core/squamas/database/DatabaseService";
+import {MongoModel} from "./core/squamas/database/MongoModel";
 
-export {Http, IoServer, Response, Request,
+
+export {Http, IoServer, Response, Request, DatabaseService, MongoModel,
     HttpService,Route, MiddlewareRoute, Middleware, MiddlewareSocket,
     SocketOn, Kernel, AbstractController, AbstractService,
     Initializer, Cron, TwigService, QueryableService}
