@@ -6,10 +6,7 @@ import {AbstractController} from "../core/AbstractController";
 export class DefaultController extends AbstractController{
 
 
-    @Route('/', 'GET')
-    @Middleware('permission', 'routes.middleware')
-    @Middleware('permission', 'routes.middleware2')
-    @Middleware('permission', 'routes.middleware3')
+    @Route('/hola', 'GET')
     public homeAction($send: Function): void {
         $send('Hola Esta es una prueba');
     }

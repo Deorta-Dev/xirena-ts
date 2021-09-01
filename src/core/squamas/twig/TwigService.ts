@@ -18,7 +18,7 @@ export class TwigService extends AbstractService {
     instances(services: any): any {
         let $this: TwigService = this;
         return {
-            render: (twigFile:string, data:any) => {
+            $render: (twigFile:string, data:any) => {
                 (({$response, $request, $kernel}) => {
                     let template = fs.readFileSync(path.join($this._config.srcDir, twigFile), 'utf8');
                     let httpConfig = __kernel.getConfig('http');
