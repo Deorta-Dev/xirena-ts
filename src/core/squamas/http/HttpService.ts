@@ -18,9 +18,11 @@ export class HttpService extends AbstractService {
         let publicDir = kernel.projectDir + '/public';
         if(config.publicDir){
             publicDir = path.join( kernel.projectDir , config.publicDir);
+            $http.use(express.static(publicDir));
+            console.log(" Using for public directory ->", publicDir);
         }
         let onReady:Function;
-        $http.use(express.static(publicDir));
+
         let port:number = config['port'];
         let ssl:any = config['ssl'];
         if (ssl) {
