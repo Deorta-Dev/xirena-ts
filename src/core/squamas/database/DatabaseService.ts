@@ -89,8 +89,8 @@ export class DatabaseService extends AbstractService{
         }
         objectConnection.connect = objectConnection;
         if ($this._globalConfig['default'] && $this._globalConfig['default']['autoConnect'])
-            return objectConnection('default', undefined);
-        else return objectConnection;
+            return { $db: objectConnection('default', undefined) };
+        else return { $db: objectConnection };
 
     }
 
@@ -151,7 +151,6 @@ export class DatabaseService extends AbstractService{
             });
         }
     }
-
 
     public createConnectionPostgres(config: any) {
         let $this: DatabaseService = this;
