@@ -42,6 +42,7 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
 
         async function apply() {
             let httpService: HttpService = __kernel.services['http'];
+            if (!route.startsWith('/')) route = '/' + route;
             httpService.addRoute(route, method, async function ($request: Request, $response: Response) {
                 if (descriptor.value.executions === undefined) {
                     descriptor.value.executions = getExecutions(descriptor.value);
