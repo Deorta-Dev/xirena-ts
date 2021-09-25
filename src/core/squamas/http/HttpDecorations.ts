@@ -4,7 +4,7 @@ import {Socket} from "socket.io";
 
 let middlewareHandles: Array<any> = [];
 
-function getExecutions(func: any): Array<any> {
+function getExecutions(func: any, classTarget: any): Array<any> {
     let handlesBefore: Array<any> = [], handlesAfter: Array<any> = [], handlesAsync: Array<any> = [];
 
     function findHandle(name: string, args: Array<any>) {
@@ -12,13 +12,13 @@ function getExecutions(func: any): Array<any> {
             if (item.name === name) {
                 switch (item.type) {
                     case 'ASYNC':
-                        handlesAsync.push({fn: item.fn, args: args, isMiddle: true});
+                        handlesAsync.push({fn: item.fn, args: args, isMiddle: true, classTarget: item.classTarget});
                         break;
                     case 'AFTER':
-                        handlesAfter.push({fn: item.fn, args: args, isMiddle: true});
+                        handlesAfter.push({fn: item.fn, args: args, isMiddle: true, classTarget: item.classTarget});
                         break;
                     case 'BEFORE':
-                        handlesBefore.push({fn: item.fn, args: args, isMiddle: true});
+                        handlesBefore.push({fn: item.fn, args: args, isMiddle: true, classTarget: item.classTarget});
                         break;
                 }
             }
@@ -30,7 +30,7 @@ function getExecutions(func: any): Array<any> {
         func.middlewaresAssigned.forEach((mid: any) => findHandle(mid.name, mid.args));
     findHandle("$finally", []);
     return handlesBefore
-        .concat([{fn: func, isAction: true}])
+        .concat([{fn: func, isAction: true, classTarget}])
         .concat(handlesAfter)
         .concat(handlesAsync);
 
@@ -45,7 +45,7 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
             if (!route.startsWith('/')) route = '/' + route;
             httpService.addRoute(route, method, async function ($request: Request, $response: Response) {
                 if (descriptor.value.executions === undefined) {
-                    descriptor.value.executions = getExecutions(descriptor.value);
+                    descriptor.value.executions = getExecutions(descriptor.value, target);
                 }
                 let params: any = $request.params;
 
@@ -63,15 +63,21 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                     function nextFn() {
                         if (executions.length > 0) {
                             currentExecution = executions.shift();
-
                             let args = getParamNamesFunctions(currentExecution.fn);
                             let dataParams: Array<any> = [];
-                            args.forEach((arg: any) => {
+                            for(let arg of args){
                                 if (currentExecution.isMiddle && arg === '$args')
                                     dataParams.push(currentExecution.args);
                                 else dataParams.push(params[arg] || undefined);
-                            });
-                            Reflect.apply(currentExecution.fn, undefined, dataParams);
+                            }
+                            let returnResponse = Reflect.apply(currentExecution.fn, currentExecution.classTarget, dataParams);
+                            if(!args.includes('$next') && !args.includes('$send')) {
+                                if(returnResponse) {
+                                    sendFn(returnResponse);
+                                }else{
+                                    nextFn();
+                                }
+                            }
                         } else sendFinalizeFn();
                     }
 
@@ -99,8 +105,7 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                         $request.on('end', () => {
                             try {
                                 body = JSON.parse(body);
-                            } catch (e) {
-                            }
+                            } catch (e) { }
                             $request.body = body;
                             nextFn();
                         });
@@ -128,7 +133,7 @@ export const MiddlewareRoute = (name: string, type: ('BEFORE' | 'AFTER' | 'ASYNC
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         if (name === '$finally') type = 'AFTER';
         descriptor.value.isMiddle = true;
-        middlewareHandles.push({name, fn: descriptor.value, type});
+        middlewareHandles.push({name, fn: descriptor.value, type, classTarget: target});
     };
 };
 

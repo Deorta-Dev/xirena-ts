@@ -7,14 +7,20 @@ export class DefaultController extends AbstractController{
 
 
     @Route('/hola', 'GET')
-    public homeAction($send: Function): void {
-        $send('Hola Esta es una prueba');
+    @Middleware('permission', 'hola')
+    public homeAction(): string {
+        this.onAction();
+        return 'Hola Esta es una prueba '+ (new Date()).toJSON();
     }
 
     @MiddlewareRoute('permission')
-    public example($next: Function, $args: Array<any>){
-        console.log("example", $args);
+    public example($args: Array<any>, $next: Function){
         $next();
+
+    }
+
+    onAction(){
+        console.log("Action");
     }
 
 
