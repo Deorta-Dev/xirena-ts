@@ -36,7 +36,7 @@ function getExecutions(func: any, classTarget: any): Array<any> {
 
 }
 
-export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' | 'ANY') = 'ANY', ...args: any) => {
+export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' | 'ANY') = 'ANY') => {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         descriptor.value.isAction = true;
 
@@ -71,7 +71,7 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                                 else dataParams.push(params[arg] || undefined);
                             }
                             let returnResponse = Reflect.apply(currentExecution.fn, currentExecution.classTarget, dataParams);
-                            if(!args.includes('$next') && !args.includes('$send')) {
+                            if(!args.includes('$next') && !args.includes('$send') && !args.includes('$redirect') ) {
                                 if(returnResponse) {
                                     sendFn(returnResponse);
                                 }else{
@@ -153,7 +153,7 @@ export const SocketOn = (name: string) => {
     };
 };
 
-export const MiddlewareSocket = (name: string) => {
+export const MiddlewareSocket = (/*name: string*/) => {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
         let httpService: HttpService = __kernel.services['http'];
         (async function apply() {
