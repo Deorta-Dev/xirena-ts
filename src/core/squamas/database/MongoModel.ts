@@ -81,7 +81,7 @@ export abstract class MongoModel {
         return (result.insertedId);
     }
 
-    $clone(){
+    $clone() {
         let cloned = this.toJson();
         cloned.id = undefined;
         let Class = this.class();
@@ -92,14 +92,17 @@ export abstract class MongoModel {
         this.updated = new Date();
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName())
-            .updateOne({_id: new ObjectId(this.id)},{$set: this.modeling()});
+            .updateOne({_id: new ObjectId(this.id)}, {$set: this.modeling()});
         connection.$finalize();
         return result;
     }
 
-    async $find(match:any, projection:any = {}, sort: any = {}) {
+    async $find(match: any, projection: any = {}, sort: any = {}) {
         let hidden: Array<string> = this.hiddenAttributes();
-        for(let attr of hidden){ projection[attr] = 0 }
+        for (let attr of hidden) {
+            if (projection[attr] === undefined)
+                projection[attr] = 0
+        }
         const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
@@ -115,9 +118,12 @@ export abstract class MongoModel {
         return objects;
     }
 
-    async $obtain(match:any, projection:any = {}, sort: any = {}) {
+    async $obtain(match: any, projection: any = {}, sort: any = {}) {
         let hidden: Array<string> = this.hiddenAttributes();
-        for(let attr of hidden){ projection[attr] = 0 }
+        for (let attr of hidden) {
+            if (projection[attr] === undefined)
+                projection[attr] = 0
+        }
         const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
@@ -126,7 +132,6 @@ export abstract class MongoModel {
         this.fromJson(result);
         return this;
     }
-
 
 
     modeling() {
@@ -139,7 +144,7 @@ export abstract class MongoModel {
     }
 
     async getCollection() {
-        if (this.connectionName() === undefined) throw 'CollectionName attribute is not defined in getCollection: '+this.connectionName();
+        if (this.connectionName() === undefined) throw 'CollectionName attribute is not defined in getCollection: ' + this.connectionName();
         let connection = await this.getConnectionDatabase();
         return connection.collection(this.connectionName());
     }
@@ -148,11 +153,11 @@ export abstract class MongoModel {
 
     abstract collectionName(): string;
 
-    public connectionName(): string{
+    public connectionName(): string {
         return 'default'
     };
 
-    public hiddenAttributes(): Array<string>{
+    public hiddenAttributes(): Array<string> {
         return [];
     };
 }
