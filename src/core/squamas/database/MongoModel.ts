@@ -164,7 +164,7 @@ export abstract class MongoModel {
     };
 
     public static toJson(object: MongoModel): any{
-        object.toJson();
+        return object.toJson();
     }
 
     public static toArrayJson(objects: Array<MongoModel>): Array<any>{
