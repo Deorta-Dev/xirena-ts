@@ -162,4 +162,12 @@ export abstract class MongoModel {
     public hiddenAttributes(): Array<string> {
         return [];
     };
+
+    public static toJson(object: MongoModel): any{
+        object.toJson();
+    }
+
+    public static toArrayJson(objects: Array<MongoModel>): Array<any>{
+        return objects.map(MongoModel.toJson);
+    }
 }
