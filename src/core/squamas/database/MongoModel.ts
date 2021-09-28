@@ -1,4 +1,5 @@
 import {ObjectId} from "mongodb";
+import {DatabaseService} from "./DatabaseService";
 
 export abstract class MongoModel {
     get created() {
@@ -139,7 +140,8 @@ export abstract class MongoModel {
     }
 
     async getConnectionDatabase() {
-        let $database = await __kernel.services['database'].instance({}).$db;
+        let databaseService: DatabaseService = __kernel.services.database;
+        let $database = await databaseService.instances({}).$db;
         return await $database(this.connectionName() || 'default');
     }
 
