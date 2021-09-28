@@ -107,7 +107,7 @@ export abstract class MongoModel {
         const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
-        let result = await connection.collection(this.connectionName()).find(match, options).toArray();
+        let result = await connection.collection(this.collectionName()).find(match, options).toArray();
         connection.$finalize();
         let objects = [];
         let Class = this.class();
@@ -146,9 +146,9 @@ export abstract class MongoModel {
     }
 
     async getCollection() {
-        if (this.connectionName() === undefined) throw 'CollectionName attribute is not defined in getCollection: ' + this.connectionName();
+        if (this.collectionName() === undefined) throw 'CollectionName attribute is not defined in getCollection: ' + this.collectionName();
         let connection = await this.getConnectionDatabase();
-        return connection.collection(this.connectionName());
+        return connection.collection(this.collectionName());
     }
 
     abstract class(): any;
