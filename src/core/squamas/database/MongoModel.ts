@@ -173,7 +173,7 @@ export abstract class MongoModel {
         for (let fn of methods) {
             // @ts-ignore
             let value: any = this[fn];
-            if (typeof value !== 'function')
+            if (fn !== '__proto__' && typeof value !== 'function')
                 project.push(fn);
         }
         return project;
