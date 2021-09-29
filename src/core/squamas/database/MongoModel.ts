@@ -56,7 +56,7 @@ export abstract class MongoModel {
         let object: any = this, methods: Array<any> = [];
         while (object = Reflect.getPrototypeOf(object)) {
             let keys = Reflect.ownKeys(object);
-            keys.forEach((k) => methods.push(k));
+            keys.forEach( k => methods.push(k));
         }
 
         for (let key in data) {
@@ -162,6 +162,33 @@ export abstract class MongoModel {
     public hiddenAttributes(): Array<string> {
         return [];
     };
+
+    public projectAttributes(): Array<string> {
+        let project = [];
+        let object: any = this, methods: Array<any> = [], result: any = {};
+        while (object = Reflect.getPrototypeOf(object)) {
+            let keys = Reflect.ownKeys(object);
+            keys.forEach((k) => methods.push(k));
+        }
+        for (let fn of methods) {
+            // @ts-ignore
+            let value: any = this[fn];
+            if (typeof value !== 'function')
+                project.push(value);
+        }
+        return project;
+    };
+
+    public projectionAttributes(): any{
+        let result:any = {};
+        let project = this.projectAttributes();
+        let hidden = this.hiddenAttributes();
+        for (let attr of project){
+            if(!hidden.includes(attr)) result[attr] = 1;
+            else result[attr] = 0;
+        }
+        return result;
+    }
 
     public static toJson(object: MongoModel): any{
         return object.toJson();
