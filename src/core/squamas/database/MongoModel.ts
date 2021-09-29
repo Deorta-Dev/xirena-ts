@@ -165,7 +165,7 @@ export abstract class MongoModel {
 
     public projectAttributes(): Array<string> {
         let project = [];
-        let object: any = this, methods: Array<any> = [], result: any = {};
+        let object: any = this, methods: Array<any> = [];
         while (object = Reflect.getPrototypeOf(object)) {
             let keys = Reflect.ownKeys(object);
             keys.forEach((k) => methods.push(k));
@@ -174,7 +174,7 @@ export abstract class MongoModel {
             // @ts-ignore
             let value: any = this[fn];
             if (typeof value !== 'function')
-                project.push(value);
+                project.push(fn);
         }
         return project;
     };
