@@ -25,6 +25,7 @@ export abstract class MongoModel {
     #_created = new Date();
     #_updated = new Date();
 
+
     get _id() {
         return this.#_id;
     }
@@ -98,13 +99,13 @@ export abstract class MongoModel {
         return result;
     }
 
-    async $find(match: any, projection: any = {}, sort: any = {}, limit: undefined| number = undefined) {
+    async $find(match: any, projection: any = {}, sort: any = {}) {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
                 projection[attr] = 0
         }
-        let options = {sort, projection, limit};
+        const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName()).find(match, options).toArray();
@@ -119,13 +120,13 @@ export abstract class MongoModel {
         return objects;
     }
 
-    async $obtain(match: any, projection: any = {}, sort: any = {}, limit: undefined | number = undefined) {
+    async $obtain(match: any, projection: any = {}, sort: any = {}) {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
                 projection[attr] = 0
         }
-        let options = {sort, projection, limit};
+        const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName()).findOne(match, options);
