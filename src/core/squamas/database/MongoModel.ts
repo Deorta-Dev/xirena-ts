@@ -25,11 +25,11 @@ export abstract class MongoModel {
     #_created = new Date();
     #_updated = new Date();
 
-    get id() {
+    get _id() {
         return this.#_id;
     }
 
-    set id(value) {
+    set _id(value) {
         this.#_id = value;
     }
 
@@ -64,13 +64,13 @@ export abstract class MongoModel {
                 // @ts-ignore
                 this[key] = data[key];
             }
-            if (key === '_id') this.id = data['_id'];
+            if (key === '_id') this._id = data['_id'];
         }
         return this;
     }
 
     async $save() {
-        if (this.id) return await this.$update();
+        if (this._id) return await this.$update();
         else return await this.$insert();
     }
 
@@ -78,13 +78,13 @@ export abstract class MongoModel {
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName()).insertOne(this.modeling());
         connection.$finalize();
-        this.id = result.insertedId;
+        this._id = result.insertedId;
         return (result.insertedId);
     }
 
     $clone() {
         let cloned = this.toJson();
-        cloned.id = undefined;
+        cloned._id = undefined;
         let Class = this.class();
         return new Class().fromJson(cloned);
     }
@@ -93,18 +93,18 @@ export abstract class MongoModel {
         this.updated = new Date();
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName())
-            .updateOne({_id: new ObjectId(this.id)}, {$set: this.modeling()});
+            .updateOne({_id: new ObjectId(this._id)}, {$set: this.modeling()});
         connection.$finalize();
         return result;
     }
 
-    async $find(match: any, projection: any = {}, sort: any = {}) {
+    async $find(match: any, projection: any = {}, sort: any = {}, limit: undefined| number) {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
                 projection[attr] = 0
         }
-        const options = {sort, projection};
+        let options = {sort, projection, limit};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName()).find(match, options).toArray();
@@ -119,13 +119,13 @@ export abstract class MongoModel {
         return objects;
     }
 
-    async $obtain(match: any, projection: any = {}, sort: any = {}) {
+    async $obtain(match: any, projection: any = {}, sort: any = {}, limit: undefined | number) {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
                 projection[attr] = 0
         }
-        const options = {sort, projection};
+        let options = {sort, projection, limit};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
         let connection = await this.getConnectionDatabase();
         let result = await connection.collection(this.collectionName()).findOne(match, options);
