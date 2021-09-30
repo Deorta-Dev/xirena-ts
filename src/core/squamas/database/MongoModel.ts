@@ -98,7 +98,7 @@ export abstract class MongoModel {
         return result;
     }
 
-    async $find(match: any, projection: any = {}, sort: any = {}, limit: undefined| number) {
+    async $find(match: any, projection: any = {}, sort: any = {}, limit: undefined| number = undefined) {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
@@ -119,7 +119,7 @@ export abstract class MongoModel {
         return objects;
     }
 
-    async $obtain(match: any, projection: any = {}, sort: any = {}, limit: undefined | number) {
+    async $obtain(match: any, projection: any = {}, sort: any = {}, limit: undefined | number = undefined) {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
