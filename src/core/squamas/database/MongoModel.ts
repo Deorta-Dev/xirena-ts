@@ -3,35 +3,35 @@ import {DatabaseService} from "./DatabaseService";
 
 export abstract class MongoModel {
     get created() {
-        return this.#_created;
+        return this._created;
     }
 
     set created(value) {
-        this.#_created = value;
+        this._created = value;
     }
 
     get updated() {
-        return this.#_updated;
+        return this._updated;
     }
 
     set updated(value) {
-        this.#_updated = value;
+        this._updated = value;
     }
 
 
-    #_id: any;
+    private __id: any;
 
 
-    #_created = new Date();
-    #_updated = new Date();
+    private _created = new Date();
+    private _updated = new Date();
 
 
     get _id() {
-        return this.#_id;
+        return this.__id;
     }
 
     set _id(value) {
-        this.#_id = value;
+        this.__id = value;
     }
 
     toJson() {
