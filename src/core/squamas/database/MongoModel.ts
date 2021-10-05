@@ -93,8 +93,10 @@ export abstract class MongoModel {
     async $update() {
         this.updated = new Date();
         let connection = await this.getConnectionDatabase();
+        let updateData = this.modeling();
+        delete updateData._id;
         let result = await connection.collection(this.collectionName())
-            .updateOne({_id: new ObjectId(this._id)}, {$set: this.modeling()});
+            .updateOne({_id: new ObjectId(this._id)}, {$set: updateData});
         connection.$finalize();
         return result;
     }
