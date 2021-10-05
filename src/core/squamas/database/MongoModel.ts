@@ -105,7 +105,7 @@ export abstract class MongoModel {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
-                projection[attr] = 0
+                delete projection[attr];
         }
         const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
@@ -126,7 +126,7 @@ export abstract class MongoModel {
         let hidden: Array<string> = this.hiddenAttributes();
         for (let attr of hidden) {
             if (projection[attr] === undefined)
-                projection[attr] = 0
+                delete projection[attr];
         }
         const options = {sort, projection};
         if (this.connectionName() === undefined) throw  'CollectionName attribute is not defined Obtain';
@@ -188,7 +188,6 @@ export abstract class MongoModel {
         let hidden = this.hiddenAttributes();
         for (let attr of project){
             if(!hidden.includes(attr)) result[attr] = 1;
-            else result[attr] = 0;
         }
         return result;
     }
