@@ -33,7 +33,7 @@ export abstract class MongoModel {
         this._mongoId = new ObjectId(value);
     }
 
-    toJson() {
+    public toJson(): any {
         let object: any = this, methods: Array<any> = [], result: any = {};
         while (object = Reflect.getPrototypeOf(object)) {
             let keys = Reflect.ownKeys(object);
@@ -47,7 +47,9 @@ export abstract class MongoModel {
                     result[fn] = value
             }
         }
-        return result;
+        let json: any = {};
+        for(let key in result){ json[key] = result[key]}
+        return json;
     }
 
     toString() {
