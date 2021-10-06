@@ -19,19 +19,18 @@ export abstract class MongoModel {
     }
 
 
-    private __id: any;
-
+    private _mongoId: string | ObjectId | undefined;
 
     private _created = new Date();
     private _updated = new Date();
 
 
-    get _id() {
-        return this.__id;
+    get _id(): string | ObjectId | undefined {
+        return this._mongoId;
     }
 
-    set _id(value) {
-        this.__id = value;
+    set _id(value: string | ObjectId | undefined) {
+        this._mongoId = new ObjectId(value);
     }
 
     toJson() {
@@ -77,6 +76,9 @@ export abstract class MongoModel {
 
     async $insert() {
         let connection = await this.getConnectionDatabase();
+        let insertData = this.modeling();
+        delete insertData._id;
+        delete insertData.__id;
         let result = await connection.collection(this.collectionName()).insertOne(this.modeling());
         connection.$finalize();
         this._id = result.insertedId;
@@ -95,6 +97,7 @@ export abstract class MongoModel {
         let connection = await this.getConnectionDatabase();
         let updateData = this.modeling();
         delete updateData._id;
+        delete updateData.__id;
         let result = await connection.collection(this.collectionName())
             .updateOne({_id: new ObjectId(this._id)}, {$set: updateData});
         connection.$finalize();
