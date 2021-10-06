@@ -81,7 +81,9 @@ export abstract class MongoModel {
         let insertData = this.modeling();
         delete insertData._id;
         delete insertData._mongoId;
-        let result = await connection.collection(this.collectionName()).insertOne(insertData);
+        let obj:any = {};
+        for(let key in insertData){ obj[key] = insertData[key]}
+        let result = await connection.collection(this.collectionName()).insertOne(obj);
         connection.$finalize();
         this._id = result.insertedId;
         return (result.insertedId);
@@ -100,6 +102,8 @@ export abstract class MongoModel {
         let updateData = this.modeling();
         delete updateData._id;
         delete updateData._mongoId;
+        let obj:any = {};
+        for(let key in updateData){ obj[key] = updateData[key]}
         let result = await connection.collection(this.collectionName())
             .updateOne({_id: new ObjectId(this._id)}, {$set: updateData});
         connection.$finalize();
