@@ -40,10 +40,12 @@ export abstract class MongoModel {
             keys.forEach((k) => methods.push(k));
         }
         for (let fn of methods) {
-            // @ts-ignore
-            let value: any = this[fn];
-            if (value !== undefined && value !== null && typeof value !== 'function')
-                result[fn] = value
+            if(fn !== '_mongoId') {
+                // @ts-ignore
+                let value: any = this[fn];
+                if (value !== undefined && value !== null && typeof value !== 'function')
+                    result[fn] = value
+            }
         }
         return result;
     }
@@ -78,7 +80,7 @@ export abstract class MongoModel {
         let connection = await this.getConnectionDatabase();
         let insertData = this.modeling();
         delete insertData._id;
-        delete insertData.__id;
+        delete insertData._mongoId;
         let result = await connection.collection(this.collectionName()).insertOne(this.modeling());
         connection.$finalize();
         this._id = result.insertedId;
@@ -97,7 +99,7 @@ export abstract class MongoModel {
         let connection = await this.getConnectionDatabase();
         let updateData = this.modeling();
         delete updateData._id;
-        delete updateData.__id;
+        delete updateData._mongoId;
         let result = await connection.collection(this.collectionName())
             .updateOne({_id: new ObjectId(this._id)}, {$set: updateData});
         connection.$finalize();
