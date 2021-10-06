@@ -19,18 +19,18 @@ export abstract class MongoModel {
     }
 
 
-    private _mongoId: string | ObjectId | undefined;
+    #_mongoId: string | ObjectId | undefined;
 
     private _created = new Date();
     private _updated = new Date();
 
 
     get _id(): string | ObjectId | undefined {
-        return this._mongoId;
+        return this.#_mongoId;
     }
 
     set _id(value: string | ObjectId | undefined) {
-        this._mongoId = new ObjectId(value);
+        this.#_mongoId = new ObjectId(value);
     }
 
     toJson() {
@@ -42,7 +42,7 @@ export abstract class MongoModel {
         for (let fn of methods) {
             if(fn !== '_mongoId') {
                 // @ts-ignore
-                let value: any = this[fn];
+                let value = this[fn];
                 if (value !== undefined && value !== null && typeof value !== 'function')
                     result[fn] = value
             }
