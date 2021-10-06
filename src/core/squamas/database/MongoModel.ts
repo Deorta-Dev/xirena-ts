@@ -25,11 +25,11 @@ export abstract class MongoModel {
     private _updated = new Date();
 
 
-    get _id(): string | ObjectId | undefined {
+    public get _id(): string | ObjectId | undefined {
         return this.#_mongoId;
     }
 
-    set _id(value: string | ObjectId | undefined) {
+    public set _id(value: string | ObjectId | undefined) {
         this.#_mongoId = new ObjectId(value);
     }
 
