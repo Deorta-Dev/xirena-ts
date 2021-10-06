@@ -19,18 +19,18 @@ export abstract class MongoModel {
     }
 
 
-    #_mongoId: string | ObjectId | undefined;
+    private _mongoId: string | ObjectId | undefined;
 
     private _created = new Date();
     private _updated = new Date();
 
 
     public get _id(): string | ObjectId | undefined {
-        return this.#_mongoId;
+        return this._mongoId;
     }
 
     public set _id(value: string | ObjectId | undefined) {
-        this.#_mongoId = new ObjectId(value);
+        this._mongoId = new ObjectId(value);
     }
 
     toJson() {
