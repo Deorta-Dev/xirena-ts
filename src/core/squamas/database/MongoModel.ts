@@ -81,7 +81,7 @@ export abstract class MongoModel {
         let insertData = this.modeling();
         delete insertData._id;
         delete insertData._mongoId;
-        let result = await connection.collection(this.collectionName()).insertOne(this.modeling());
+        let result = await connection.collection(this.collectionName()).insertOne(insertData);
         connection.$finalize();
         this._id = result.insertedId;
         return (result.insertedId);
