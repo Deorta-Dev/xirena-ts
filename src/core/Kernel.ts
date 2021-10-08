@@ -142,6 +142,9 @@ export class Kernel {
     }
 
     async prepareServer(){
+        let config = this.getConfig('initial');
+        global.__isDebug = config.debug || false;
+        if(__isDebug) console.log(" ", "Debug mode active")
         this._isLocal = false;
         await this.prepareServices();
         await this.prepareControllers();
