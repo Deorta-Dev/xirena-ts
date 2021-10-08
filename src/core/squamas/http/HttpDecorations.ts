@@ -77,7 +77,7 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                             let returnResponse;
                             try {
                                 returnResponse = Reflect.apply(currentExecution.fn, currentExecution.classTarget, dataParams);
-                            } catch (e) {
+                            } catch (e:any) {
                                 sendFn(function (response: Response) {
                                     response.status(500)
                                         .send({status: 'error', error: e, message: e.message});
