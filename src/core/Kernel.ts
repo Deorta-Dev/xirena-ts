@@ -6,6 +6,7 @@ import {AbstractController} from "./AbstractController";
 
 declare global {
     var __kernel: Kernel;
+    var __isDebug: boolean;
 }
 
 export class Kernel {
@@ -15,7 +16,6 @@ export class Kernel {
     private _services: any = {};
     private _projectDir: string = "";
 
-    private _runReady = false;
     private _listenerReady: Array<Function> = [];
 
     private _appScope: any;
@@ -36,6 +36,7 @@ export class Kernel {
         console.log("├------ Initializer Xirena TS ------┤");
         console.log("└-----------------------------------┘");
 
+
         GlobalFunction();
 
         global.__kernel = this;
@@ -45,11 +46,9 @@ export class Kernel {
     private async prepareControllers(){
 
         let config = this.getConfig('initial');
-        let $this: Kernel = this;
         /**
          * Build Controllers
          */
-        let controllerBuilds = [];
         console.log(` Loading Controllers`);
         if (config['controllers'] !== undefined) {
             if (config['controllers']['mapping'] === 'auto') {
@@ -94,17 +93,14 @@ export class Kernel {
 
                                     let objectService: AbstractService = new ClassService();
 
-                                    if (objectService instanceof AbstractService) {
-
-                                        let name: string = ClassService.$name;
-                                        if (name === undefined) {
-                                            name = key.replace(/[S][e][r][v][i][c][e]$/, '');
-                                            name = name.charAt(0).toLowerCase() + name.slice(1);
-                                        }
-                                        await objectService.build($this);
-                                        $this.addService(name, objectService);
-
+                                    let name: string = ClassService.$name;
+                                    if (name === undefined) {
+                                        name = key.replace(/[S][e][r][v][i][c][e]$/, '');
+                                        name = name.charAt(0).toLowerCase() + name.slice(1);
                                     }
+                                    await objectService.build($this);
+                                    $this.addService(name, objectService);
+
                                 }
                             }
                         }
@@ -137,6 +133,9 @@ export class Kernel {
     }
 
     async prepare(){
+        let config = this.getConfig('initial');
+        global.__isDebug = config.debug || false;
+        if(__isDebug) console.log(" ", "Debug mode active")
         this._isLocal = true;
         await this.prepareServices();
         await this.prepareControllers();

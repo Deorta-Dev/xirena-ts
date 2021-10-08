@@ -43,7 +43,11 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
         async function apply() {
             let httpService: HttpService = __kernel.services['http'];
             if (!route.startsWith('/')) route = '/' + route;
+
             httpService.addRoute(route, method, async function ($request: Request, $response: Response) {
+
+                let captureTime: Date;
+                if (__isDebug) captureTime = new Date();
                 if (descriptor.value.executions === undefined) {
                     descriptor.value.executions = getExecutions(descriptor.value, target);
                 }
@@ -65,16 +69,26 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                             currentExecution = executions.shift();
                             let args = getParamNamesFunctions(currentExecution.fn);
                             let dataParams: Array<any> = [];
-                            for(let arg of args){
+                            for (let arg of args) {
                                 if (currentExecution.isMiddle && arg === '$args')
                                     dataParams.push(currentExecution.args);
                                 else dataParams.push(params[arg] || undefined);
                             }
-                            let returnResponse = Reflect.apply(currentExecution.fn, currentExecution.classTarget, dataParams);
-                            if(!args.includes('$next') && !args.includes('$send') && !args.includes('$redirect') ) {
-                                if(returnResponse) {
+                            let returnResponse;
+                            try {
+                                returnResponse = Reflect.apply(currentExecution.fn, currentExecution.classTarget, dataParams);
+                            } catch (e) {
+                                sendFn(function (response: Response) {
+                                    response.status(500)
+                                        .send({status: 'error', error: e, message: e.message});
+                                });
+                                if (currentExecution.isAction) sendFinalizeFn();
+
+                            }
+                            if (!args.includes('$next') && !args.includes('$send') && !args.includes('$redirect')) {
+                                if (returnResponse) {
                                     sendFn(returnResponse);
-                                }else{
+                                } else {
                                     nextFn();
                                 }
                             }
@@ -88,6 +102,11 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                             isSend = true;
                             if (typeof dataResponse === 'function') dataResponse($response);
                             else $response.send(dataResponse);
+                            if (__isDebug) {
+                                let now:Date = new Date();
+                                console.log(now, `[${$request.method}] ${$request.url} -> ${target.constructor.name}.${propertyKey} | Process time: ${((now.getTime() - captureTime.getTime()) / 1000).toFixed(3)} s`);
+                            }
+
                             params['$finalize']();
                         }
                     }
@@ -105,7 +124,8 @@ export const Route = (route: string, method: ('GET' | 'POST' | 'PUT' | 'DELETE' 
                         $request.on('end', () => {
                             try {
                                 body = JSON.parse(body);
-                            } catch (e) { }
+                            } catch (e) {
+                            }
                             $request.body = body;
                             nextFn();
                         });
