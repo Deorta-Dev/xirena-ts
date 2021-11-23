@@ -7,7 +7,7 @@ export abstract class MongoModel {
     }
 
     set created(value) {
-        this._created = value;
+        this._created = new Date(value);
     }
 
     get updated() {
@@ -15,7 +15,7 @@ export abstract class MongoModel {
     }
 
     set updated(value) {
-        this._updated = value;
+        this._updated = new Date(value);
     }
 
 
@@ -40,7 +40,7 @@ export abstract class MongoModel {
             keys.forEach((k) => methods.push(k));
         }
         for (let fn of methods) {
-            if(fn !== '_mongoId') {
+            if (fn !== '_mongoId') {
                 // @ts-ignore
                 let value = this[fn];
                 if (value !== undefined && value !== null && typeof value !== 'function')
@@ -48,7 +48,9 @@ export abstract class MongoModel {
             }
         }
         let json: any = {};
-        for(let key in result){ json[key] = result[key]}
+        for (let key in result) {
+            json[key] = result[key]
+        }
         return json;
     }
 
@@ -60,7 +62,7 @@ export abstract class MongoModel {
         let object: any = this, methods: Array<any> = [];
         while (object = Reflect.getPrototypeOf(object)) {
             let keys = Reflect.ownKeys(object);
-            keys.forEach( k => methods.push(k));
+            keys.forEach(k => methods.push(k));
         }
 
         for (let key in data) {
@@ -83,8 +85,10 @@ export abstract class MongoModel {
         let insertData = this.modeling();
         delete insertData._id;
         delete insertData._mongoId;
-        let obj:any = {};
-        for(let key in insertData){ obj[key] = insertData[key]}
+        let obj: any = {};
+        for (let key in insertData) {
+            obj[key] = insertData[key]
+        }
         let result = await connection.collection(this.collectionName()).insertOne(obj);
         connection.$finalize();
         this._id = result.insertedId;
@@ -104,8 +108,11 @@ export abstract class MongoModel {
         let updateData = this.modeling();
         delete updateData._id;
         delete updateData._mongoId;
-        let obj:any = {};
-        for(let key in updateData){ obj[key] = updateData[key]}
+        let obj: any = {};
+        for (let key in updateData) {
+            if (updateData[key] !== undefined )
+                obj[key] = updateData[key];
+        }
         let result = await connection.collection(this.collectionName())
             .updateOne({_id: new ObjectId(this._id)}, {$set: updateData});
         connection.$finalize();
@@ -193,21 +200,21 @@ export abstract class MongoModel {
         return project;
     };
 
-    public projectionAttributes(): any{
-        let result:any = {};
+    public projectionAttributes(): any {
+        let result: any = {};
         let project = this.projectAttributes();
         let hidden = this.hiddenAttributes();
-        for (let attr of project){
-            if(!hidden.includes(attr)) result[attr] = 1;
+        for (let attr of project) {
+            if (!hidden.includes(attr)) result[attr] = 1;
         }
         return result;
     }
 
-    public static toJson(object: MongoModel): any{
+    public static toJson(object: MongoModel): any {
         return object.toJson();
     }
 
-    public static toArrayJson(objects: Array<MongoModel>): Array<any>{
+    public static toArrayJson(objects: Array<MongoModel>): Array<any> {
         return objects.map(MongoModel.toJson);
     }
 }
