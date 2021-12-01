@@ -6,7 +6,7 @@ export const Initializer = () => {
             let args = getParamNamesFunctions(descriptor.value);
             let dataParams:Array<any> = [];
             args.forEach((arg:any)=>  dataParams.push(params[arg] || undefined));
-            Reflect.apply(descriptor.value, undefined, dataParams);
+            Reflect.apply(descriptor.value, target, dataParams);
         });
     }
 }
@@ -18,7 +18,7 @@ export const Cron = (interval: string = '* * * * * *') => {
             let args = getParamNamesFunctions(descriptor.value);
             let dataParams:Array<any> = [];
             args.forEach((arg:any)=>  dataParams.push(params[arg] || undefined));
-            Reflect.apply(descriptor.value, undefined, dataParams);
+            Reflect.apply(descriptor.value, target, dataParams);
         });
         __kernel.onReady( ()=> job.start());
     }
