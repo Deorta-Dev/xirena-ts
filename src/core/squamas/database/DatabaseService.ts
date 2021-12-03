@@ -127,7 +127,11 @@ export class DatabaseService extends AbstractService{
 
         function prepare(connection:any) {
             if (config.timeLife)
-                setTimeout(() => connection.$finalize(), config.timeLife);
+                setTimeout(() => {
+                    try{
+                        connection.$finalize();
+                    }catch (e){ }
+                }, config.timeLife);
             return connection;
         }
 
