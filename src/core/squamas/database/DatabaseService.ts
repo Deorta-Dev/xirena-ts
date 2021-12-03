@@ -1,5 +1,4 @@
 import {AbstractService, Kernel} from "../../../index";
-import {constants} from "os";
 
 export class DatabaseService extends AbstractService{
 
@@ -135,7 +134,6 @@ export class DatabaseService extends AbstractService{
             return connection;
         }
 
-        let now = new Date();
 
         if (Array.isArray(config.connectionsList) && config.connectionsList.length > 0) {
             let connection = config.connectionsList.shift();
@@ -158,7 +156,7 @@ export class DatabaseService extends AbstractService{
 
     public createConnectionPostgres(config: any) {
         let $this: DatabaseService = this;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (config && config['connection'] === 'postgres') {
                 let {user, host, database, password, port} = config;
                 const {Pool} = require("pg");
@@ -242,13 +240,18 @@ export class DatabaseService extends AbstractService{
                         config.firstConnect = true
 
                         connection.$finalize = function () {
-                            connection.close();
-                            if (Array.isArray(config.connectionsList))
-                                config.connectionsList.forEach((con:any, i:number) => {
-                                    if (connection === con) {
-                                        config.connectionsList.splice(i, 1);
-                                    }
-                                });
+                            try{
+                                connection.close();
+                                if (Array.isArray(config.connectionsList))
+                                    config.connectionsList.forEach((con:any, i:number) => {
+                                        if (connection === con) {
+                                            config.connectionsList.splice(i, 1);
+                                        }
+                                    });
+                            }catch (e){
+
+                            }
+
                         };
                         resolve(connection);
                     });
@@ -259,7 +262,7 @@ export class DatabaseService extends AbstractService{
 
     public createConnectionMongoDB(config: any) {
         let $this: DatabaseService = this;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (config && config['connection'] === 'mongodb') {
                 if (config['dns'] !== undefined) {
                     if (config.clientsList.length < config.clients) {
@@ -278,6 +281,7 @@ export class DatabaseService extends AbstractService{
                                     $this.createConnectionMongoDB(config).then(resolveRetry).catch(() => retry(resolveRetry));
                                 }, 500);
                             }
+                            retry(resolve);
                         } else {
                             if (!config.firstConnect) {
                                 console.log('\x1b[34m', 'Connect Database: ' + config['database'] + ' | Mongodb', '\x1b[0m');
