@@ -6,7 +6,6 @@ import {Http, IoServer, Response} from "./Http";
 import fs from "fs";
 import ip from "ip";
 import * as Socket from "socket.io";
-
 let $http: Http;
 let $ioServer: IoServer;
 
@@ -33,7 +32,7 @@ export class HttpService extends AbstractService {
         if (ssl) {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
-            $ioServer = new Socket.Server(server);
+            $ioServer = require("socket.io")(server);
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
@@ -68,7 +67,7 @@ export class HttpService extends AbstractService {
         } else {
             let options = {};
             let server = require('http').createServer(options, $http);
-            $ioServer = new Socket.Server(server);
+            $ioServer = require("socket.io")(server);
             onReady = () => {
 
                 server.listen(port, () => {
