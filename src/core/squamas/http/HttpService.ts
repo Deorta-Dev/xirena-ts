@@ -29,6 +29,17 @@ export class HttpService extends AbstractService {
         } else port = config['port'];
 
         let ssl: any = config['ssl'];
+
+        const normalListener: Function = () => {
+            console.log("\x1b[32m", '');
+            console.log(' +----------------------------------------------------------+');
+            let string = ' | Listening on ' + ip.address() + ':' + port;
+            while (string.length < 60) string += ' ';
+            string += '|';
+            console.log(string);
+            console.log(' +----------------------------------------------------------+\n');
+            console.log("\x1b[0m", '');
+        }
         if (ssl) {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
@@ -51,16 +62,7 @@ export class HttpService extends AbstractService {
                         } else port = config['port'] + 1;
                         let options = {};
                         let server = require('http').createServer(options, $http);
-                        server.listen(port, () => {
-                            console.log("\x1b[32m", '');
-                            console.log(' +------------------------------------------------+');
-                            let string = ' | Listening on ' + ip.address() + ':' + port;
-                            while (string.length < 50) string += ' ';
-                            string += '|';
-                            console.log(string);
-                            console.log(' +------------------------------------------------+\n');
-                            console.log("\x1b[0m", '');
-                        });
+                        server.listen(port, normalListener);
                     }
                 });
             }
@@ -70,16 +72,7 @@ export class HttpService extends AbstractService {
             $ioServer = require("socket.io")(server);
             onReady = () => {
 
-                server.listen(port, () => {
-                    console.log("\x1b[32m", '');
-                    console.log(' +------------------------------------------------+');
-                    let string = ' | Listening on ' + ip.address() + ':' + port;
-                    while (string.length < 50) string += ' ';
-                    string += '|';
-                    console.log(string);
-                    console.log(' +------------------------------------------------+\n');
-                    console.log("\x1b[0m", '');
-                });
+                server.listen(port, normalListener);
             }
 
         }
