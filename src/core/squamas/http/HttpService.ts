@@ -89,11 +89,13 @@ export class HttpService extends AbstractService {
             });
 
             $this._socketOnFunction.forEach((listener: any) => {
-                if (listener.name !== '$disconnect' && listener.name !== '$connection')
+                if (listener.name !== '$disconnect' && listener.name !== '$connection') {
+                    console.log(new Date(), 'Create listener', listener.name);
                     $socket.on(listener.name, function (data: any, callback: Function) {
                         if (data !== '' && data !== undefined && data !== null && typeof data === 'string') data = JSON.parse(decodeURIComponent(escape(atob(data))));
                         listener.fn($socket, data, $connScope, callback);
                     });
+                }
             });
 
             $socket.on('disconnect', function () {
