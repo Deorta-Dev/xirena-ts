@@ -13,12 +13,13 @@ export class HttpService extends AbstractService {
 
 
     public build(kernel: Kernel): any {
-        $http = express();
+        console.log(new Date(), 'starting Xirena-TS System')
         let config: any = kernel.getConfig('http');
         let publicDir = kernel.projectDir + '/public';
         if (config.publicDir) {
             publicDir = path.join(kernel.projectDir, config.publicDir);
         }
+        $http = express();
         $http.use(express.json({type: '*/*'}));
         $http.use(express.static(publicDir));
         console.log(" Using for public directory ->", publicDir);
