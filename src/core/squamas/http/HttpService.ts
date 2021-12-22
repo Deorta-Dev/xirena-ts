@@ -46,6 +46,9 @@ export class HttpService extends AbstractService {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
             $ioServer = require("socket.io")(server,  { origins: '*:*'});
+
+            // @ts-ignore
+            $ioServer.set('origins', '*:*');
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
