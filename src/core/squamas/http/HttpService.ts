@@ -47,8 +47,6 @@ export class HttpService extends AbstractService {
             let server = require('https').createServer(options, $http);
             $ioServer = require("socket.io")(server,  { origins: '*:*'});
 
-            // @ts-ignore
-            $ioServer.set('origins', '*:*');
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
@@ -74,7 +72,8 @@ export class HttpService extends AbstractService {
         } else {
             let options = {};
             let server = require('http').createServer(options, $http);
-            $ioServer = require("socket.io")(server);
+            $ioServer = new IoServer(server, { cors: { origin: '*' } });
+
             onReady = () => {
 
                 server.listen(port, normalListener);
