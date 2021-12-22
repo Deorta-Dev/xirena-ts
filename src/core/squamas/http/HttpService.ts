@@ -43,7 +43,7 @@ export class HttpService extends AbstractService {
         if (ssl) {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
-            $ioServer = require("socket.io")(server);
+            $ioServer = new Socket.Server(server);
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');
@@ -66,12 +66,12 @@ export class HttpService extends AbstractService {
                     }
                 });
             }
-        } else {
+        }
+        else {
             let options = {};
             let server = require('http').createServer(options, $http);
-            $ioServer = require("socket.io")(server);
+            $ioServer = new Socket.Server(server);
             onReady = () => {
-
                 server.listen(port, normalListener);
             }
 
@@ -79,7 +79,7 @@ export class HttpService extends AbstractService {
 
         let $this = this;
         $ioServer.on('connection', ($socket: Socket.Socket) => {
-
+            console.log(new Date(), "new connection on socket");
             let $connScope = {};
 
             $this._socketOnFunction.forEach((listener: any) => {

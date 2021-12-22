@@ -1,4 +1,4 @@
-import {Middleware, MiddlewareRoute, Route} from "../core/squamas/http/HttpDecorations";
+import {Middleware, MiddlewareRoute, Route, SocketOn} from "../core/squamas/http/HttpDecorations";
 import {AbstractController} from "../core/AbstractController";
 
 
@@ -23,5 +23,9 @@ export class DefaultController extends AbstractController{
         console.log("Action");
     }
 
+    @SocketOn('example')
+    onListener(){
+        console.log("Action Listener");
+    }
 
 }
