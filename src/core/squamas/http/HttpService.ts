@@ -13,7 +13,7 @@ export class HttpService extends AbstractService {
 
 
     public build(kernel: Kernel): any {
-        console.log(new Date(), 'starting Xirena-TS System')
+        console.log(new Date(), 'build Http Service System')
         let config: any = kernel.getConfig('http');
         let publicDir = kernel.projectDir + '/public';
         if (config.publicDir) {
@@ -45,7 +45,7 @@ export class HttpService extends AbstractService {
         if (ssl) {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
-            $ioServer = require("socket.io")(server);
+            $ioServer = require("socket.io")(server,  { origins: '*:*'});
             onReady = () => {
                 server.listen(port, () => {
                     console.log("\x1b[32m", '');

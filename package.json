@@ -42,6 +42,7 @@
     "twig": "^1.15.4"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.12",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.12"
   }
