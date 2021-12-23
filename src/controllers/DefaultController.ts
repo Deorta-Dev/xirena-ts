@@ -23,9 +23,14 @@ export class DefaultController extends AbstractController{
         console.log("Action");
     }
 
-    @SocketOn('example')
+    @SocketOn('$connection')
     onListener(){
         console.log("Action Listener");
+    }
+
+    @SocketOn('login_admin')
+    onListenerType(){
+        console.log("Action Type");
     }
 
 }

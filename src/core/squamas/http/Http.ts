@@ -7,4 +7,4 @@ export interface Request extends core.Request{}
 
 export interface Response extends core.Response {}
 
-export class IoServer extends Socket.Server{}
+export interface IoServer extends Socket.Server{}

@@ -1,6 +1,5 @@
 import {AbstractService} from "../../AbstractService";
 import {Kernel} from "../../Kernel";
-import express from "express";
 import path from "path";
 import {Http, IoServer, Response} from "./Http";
 import fs from "fs";
@@ -8,6 +7,9 @@ import ip from "ip";
 import * as Socket from "socket.io";
 let $http: Http;
 let $ioServer: IoServer;
+
+const express = require('express');
+
 
 export class HttpService extends AbstractService {
 
@@ -20,7 +22,7 @@ export class HttpService extends AbstractService {
             publicDir = path.join(kernel.projectDir, config.publicDir);
         }
         $http = express();
-        $http.use(express.json({type: '*/*'}));
+        //$http.use(cors({origin: '*'}));
         $http.use(express.static(publicDir));
         console.log(" Using for public directory ->", publicDir);
 
@@ -45,7 +47,7 @@ export class HttpService extends AbstractService {
         if (ssl) {
             let options = {key: fs.readFileSync(ssl.key), cert: fs.readFileSync(ssl.cert)};
             let server = require('https').createServer(options, $http);
-            $ioServer = require("socket.io")(server,  { origins: '*:*'});
+            $ioServer = require("socket.io")(server);
 
             onReady = () => {
                 server.listen(port, () => {
@@ -69,11 +71,12 @@ export class HttpService extends AbstractService {
                     }
                 });
             }
-        } else {
+        }
+        else {
             let options = {};
             let server = require('http').createServer(options, $http);
-            $ioServer = new IoServer(server, { cors: { origin: '*' } });
-
+            $ioServer =  require('socket.io')(server);
+            //$ioServer.listen(4000);
             onReady = () => {
 
                 server.listen(port, normalListener);
@@ -94,7 +97,6 @@ export class HttpService extends AbstractService {
 
             $this._socketOnFunction.forEach((listener: any) => {
                 if (listener.name !== '$disconnect' && listener.name !== '$connection') {
-                    console.log(new Date(), 'Create listener', listener.name);
                     $socket.on(listener.name, function (data: any, callback: Function) {
                         if (data !== '' && data !== undefined && data !== null && typeof data === 'string') data = JSON.parse(decodeURIComponent(escape(atob(data))));
                         listener.fn($socket, data, $connScope, callback);
