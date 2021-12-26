@@ -162,7 +162,7 @@ export abstract class MongoModel {
 
     async getConnectionDatabase() {
         let databaseService: DatabaseService = __kernel.services.database;
-        let $database = await databaseService.instances({}).$db;
+        let {$db: $database} = await databaseService.instances({});
         return await $database(this.connectionName() || 'default');
     }
 
