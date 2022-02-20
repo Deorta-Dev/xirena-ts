@@ -137,8 +137,7 @@ export class DatabaseService extends AbstractService{
 
         if (Array.isArray(config.connectionsList) && config.connectionsList.length > 0) {
             let connection = config.connectionsList.shift();
-            this.createConnection(name);
-
+            config.connectionsList.push(connection);
             return new Promise(resolve => {
                 resolve(prepare(connection));
             });
@@ -194,17 +193,7 @@ export class DatabaseService extends AbstractService{
 
                         config.firstConnect = true;
                         connection.$finalize = function () {
-                            try {
-                                connection.release();
-                                if (Array.isArray(config.connectionsList))
-                                    for (let [i, con] of config.connectionsList.entries()) {
-                                        if (connection === con) {
-                                            config.connectionsList.splice(i, 1);
-                                            break;
-                                        }
-                                    }
-                            } catch (e) {
-                            }
+
                         };
                         resolve(connection);
                     }
@@ -241,13 +230,7 @@ export class DatabaseService extends AbstractService{
 
                         connection.$finalize = function () {
                             try{
-                                connection.close();
-                                if (Array.isArray(config.connectionsList))
-                                    config.connectionsList.forEach((con:any, i:number) => {
-                                        if (connection === con) {
-                                            config.connectionsList.splice(i, 1);
-                                        }
-                                    });
+
                             }catch (e){
 
                             }
@@ -289,15 +272,6 @@ export class DatabaseService extends AbstractService{
                             config.firstConnect = true;
                             let db = connection.db(config['database']);
                             db.$finalize = function () {
-                                try {
-                                    connection.close();
-                                    if (Array.isArray(config.connectionsList))
-                                        config.connectionsList.forEach((con: any, i: number) => {
-                                            if (connection === con) {
-                                                config.connectionsList.splice(i, 1);
-                                            }
-                                        })
-                                }catch (e){}
 
                             };
                             resolve(db);

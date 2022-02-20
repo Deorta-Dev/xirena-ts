@@ -1,6 +1,6 @@
 {
   "name": "xirena-ts",
-  "version": "1.0.73",
+  "version": "1.0.74",
   "description": "Xirena Ts busca ser un marco de desarrollo que apoye a programar en TypeScript por medio de controladores, servicios y decoradores, de esta forma llevar un desarrollo ágil y cómodo.",
   "main": "build/index.js",
   "types": "src/index.ts",
@@ -44,6 +44,7 @@
     "@types/cors": "^2.8.12",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.12",
-    "socket.io": "^2.1.1"
+    "socket.io": "^2.1.1",
+    "typescript": "^4.5.5"
   }
 }
